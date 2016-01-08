@@ -6,9 +6,11 @@ output: html_document
 ---
 Reproducing results on analyzing steps taken by a volunteer at different times of day
 ---
+
+*NOTE: If the figures does not display from github, please copy the raw contents of PA1_template.html to page.html on your local computer, and open that local page.html with a browser from your local disk to see the figures along with the commentary from PA1_template.md*
+
 **1. Code for reading in the dataset and/or processing the data**
 
-To reproduce our results, first copy and unzip the measurement data file activity.csv from https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip to the R working directory. Next, read it into a data frame, and omit the rows with no values in in the measurement column `steps`:
 ```{r, echo=T, meassage=F, warning=F}
 library(plyr)
 dfwna=read.csv('activity.csv')
