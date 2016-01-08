@@ -1,17 +1,97 @@
-### Reproducible Research Project Assignment 1 Instructions
+---
+title: "Project Assignment 1"
+author: "Mark Sandstrom"
+date: "Friday, January 08, 2016"
+output: html_document
+---
+Reproducing results on analyzing steps taken by a volunteer at different times of day
+---
+**1. Code for reading in the dataset and/or processing the data**
 
-#### Introduction
+To reproduce our results, first copy and unzip the measurement data file activity.csv from https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip to the R working directory. Next, read it into a data frame, and omit the rows with no values in in the measurement column `steps`:
+```{r, echo=T, meassage=F, warning=F}
+library(plyr)
+dfwna=read.csv('activity.csv')
+df=subset(dfwna,steps!='NA')
+any(is.na(df))
+```
 
-It is now possible to collect a large amount of data about personal movement using activity monitoring devices such as a Fitbit, Nike Fuelband, or Jawbone Up. These type of devices are part of the “quantified self” movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. But these data remain under-utilized both because the raw data are hard to obtain and there is a lack of statistical methods and software for processing and interpreting the data.
+To view basic aspects of the measurement data frame `df`:
+```{r, echo=T, meassage=F, warning=F}
+str(df)
+summary(df)
+```
 
-This assignment makes use of data from a personal activity monitoring device. This device collects data at 5 minute intervals through out the day. The data consists of two months of data from an anonymous individual collected during the months of October and November, 2012 and include the number of steps taken in 5 minute intervals each day.
+The measurement `steps` is simply an integer count of (e.g. walking) steps taken by the volunteer wearing the monitoring system on the `date` and the observation `interval` by their respective columns, where the value of `interval` is an identification of a 5-minute interval during any given `date`.
 
-The data for this assignment can be downloaded via https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip
+**2. Histogram of the total number of steps taken each day**
 
-The variables included in this dataset are:
+To histogram the daily totals of the `steps` with measurement intervals with missing values (NAs) for `steps` ignored:
+```{r, echo=T, meassage=F, warning=F}
+dailytotals=ddply(df, c('date'), summarise, totals=sum(steps))
+hist(dailytotals$totals, col='green', xlab='daily-totals steps (ingoring NAs)', ylab='count of days with the given daily-total')
+```
 
-- steps: Number of steps taking in a 5-minute interval (missing values are coded as NA)
-- date: The date on which the measurement was taken in YYYY-MM-DD format
-- interval: Identifier for the 5-minute interval in which measurement was taken
+**3. Mean and median number of steps taken each day**
 
-The dataset is stored in a comma-separated-value (CSV) file and there are a total of 17,568 observations in this dataset.
+To report the daily means and medians of `steps` taken:
+```{r, echo=T, meassage=F, warning=F}
+dailyaves=ddply(df, c('date'), summarise, mean=mean(steps), median=median(steps))
+summary(round(dailyaves$mean))
+summary(dailyaves$median)
+```
+
+**4. Time series plot of the average number of steps taken**
+
+To see any pattern in the daily averages of `steps` (as seen above, the medians stay at 0 for each day):
+```{r, echo=T, meassage=F, warning=F}
+plot(dailyaves$date, dailyaves$mean, xlab='date', ylab='daily averages of steps for 5-minute intervals (omitting NAs)')
+lines(dailyaves$date, dailyaves$mean)
+```
+
+**5. The 5-minute interval that, on average, contains the maximum number of steps**
+
+To see any pattern in the per-5-minute-interval averages of `steps` across the dates:
+```{r, echo=T, meassage=F, warning=F}
+intervalaves=ddply(df, c('interval'), summarise, mean=mean(steps))
+plot(intervalaves$interval, intervalaves$mean, type='l', col='red', xlab='interval', ylab='mean steps')
+```
+
+The 5-minute `interval` with maximum `steps` in average across the `dates`:
+```{r, echo=T, meassage=F, warning=F}
+maxi=subset(intervalaves, mean==max(intervalaves$mean))
+maxi
+```
+
+**6. Code to describe and show a strategy for imputing missing data**
+
+To replase the missing values for `steps` by the average value for their respective intervals:
+```{r, echo=T, meassage=F, warning=F}
+dfim=dfwna
+dfim$steps[is.na(dfim$steps)] = with(dfim, ave(steps, interval, FUN = function(x) mean(x, na.rm=T)))[is.na(dfim$steps)]
+any(is.na(dfim))
+```
+
+**7. Histogram of the total number of steps taken each day after missing values are imputed**
+
+To histogram the daily totals of the `steps` with measurement intervals after missing values (NAs) for `steps` imputed per above:
+```{r, echo=T, meassage=F, warning=F}
+dailytotalsim=ddply(dfim, c('date'), summarise, totals=sum(steps))
+hist(dailytotalsim$totals, col='blue', xlab='daily-total steps (NAs replaced by interval-means)', ylab='count of days with the given daily-total')
+```
+
+**8. Panel plot comparing the average number of steps taken per 5-minute interval across weekdays and weekends**
+
+To see if there is a difference in per-interval-averages of steps taken between weekdays (Mon-Fri) and weekends (Sat-Sun):
+```{r, echo=T, meassage=F, warning=F}
+dfwd=mutate(df, wd=timeDate::isWeekday(date))
+dfwk=subset(dfwd,wd==T)
+dfwe=subset(dfwd,wd==F)
+par(mfrow=c(2,1))
+intervalaves=ddply(dfwk, c('interval'), summarise, mean=mean(steps))
+plot(intervalaves$interval, intervalaves$mean, 'l', col='blue', xlab='interval', ylab='Mon-Fri mean steps',lwd=3)
+intervalaves=ddply(dfwe, c('interval'), summarise, mean=mean(steps))
+plot(intervalaves$interval, intervalaves$mean, 'l', col='green', xlab='interval', ylab='Sat-Sun mean steps',lwd=3)
+
+```
+
