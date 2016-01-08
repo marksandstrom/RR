@@ -7,7 +7,7 @@ output: html_document
 Reproducing results on analyzing steps taken by a volunteer at different times of day
 ---
 
-*NOTE: If the figures does not display from github, please copy the raw contents of PA1_template.html to page.html on your local computer, and open that local page.html with a browser from your local disk to see the figures along with the commentary from PA1_template.md*
+*NOTE: If the figures do not display from github, please copy the raw contents of PA1_template.html to page.html on your local computer, and open that local page.html with a browser from your local disk to see the figures along with the commentary from PA1_template.md*
 
 **1. Code for reading in the dataset and/or processing the data**
 
